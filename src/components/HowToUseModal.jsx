@@ -58,9 +58,9 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                   <span className="text-xl">📹</span> Camera Values
                 </p>
                 <ul className="list-disc list-inside space-y-1 ml-2 text-sm text-gray-600">
-                  <li><strong>Cam 1:</strong> Entrance camera</li>
-                  <li><strong>Cam 2:</strong> Opposite side of Cam 1</li>
-                  <li>For videos with multiple parts, use format: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-red-700 font-mono">"Cam 2 Part 1"</code></li>
+                  <li><strong>Cam1:</strong> Entrance camera</li>
+                  <li><strong>Cam2:</strong> Opposite side of Cam1</li>
+                  <li>For videos with multiple parts, use format: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-red-700 font-mono">"Cam2 Part 1"</code></li>
                 </ul>
               </div>
 
@@ -151,9 +151,9 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                   <span className="text-xl">📹</span> Valores ng Camera
                 </p>
                 <ul className="list-disc list-inside space-y-1 ml-2 text-sm text-gray-600">
-                  <li><strong>Cam 1:</strong> Camera sa entrance</li>
-                  <li><strong>Cam 2:</strong> Kabilang side ng Cam 1</li>
-                  <li>Para sa mga video na may maraming bahagi, gamitin ang format: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-red-700 font-mono">"Cam 2 Part 1"</code></li>
+                  <li><strong>Cam1:</strong> Camera sa entrance</li>
+                  <li><strong>Cam2:</strong> Kabilang side ng Cam1</li>
+                  <li>Para sa mga video na may maraming bahagi, gamitin ang format: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-red-700 font-mono">"Cam2 Part 1"</code></li>
                 </ul>
               </div>
 
