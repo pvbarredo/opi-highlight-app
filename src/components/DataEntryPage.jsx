@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -29,6 +29,7 @@ export default function DataEntryPage() {
   ]);
   const [showHowToUse, setShowHowToUse] = useState(false);
   const [language, setLanguage] = useState('english'); // 'english' or 'filipino'
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [alertModal, setAlertModal] = useState({
     show: false,
     title: '',
@@ -36,6 +37,16 @@ export default function DataEntryPage() {
     type: 'info', // 'info', 'success', 'confirm'
     onConfirm: null,
   });
+
+  // Handle window resize to toggle between mobile and desktop views
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -88,21 +99,11 @@ export default function DataEntryPage() {
   };
 
   const updateRow = (id, field, value) => {
-    setRows((prevRows) => {
-      const updatedRows = prevRows.map((row) => 
+    setRows((prevRows) =>
+      prevRows.map((row) =>
         row.id === id ? { ...row, [field]: value } : row
-      );
-      
-      console.log('=== UPDATE ROW ===');
-      console.log('Row ID:', id);
-      console.log('Field:', field);
-      console.log('New Value:', value);
-      console.log('Updated Row:', updatedRows.find(row => row.id === id));
-      console.log('All Rows:', JSON.stringify(updatedRows, null, 2));
-      console.log('==================');
-      
-      return updatedRows;
-    });
+      )
+    );
   };
 
   const handleSaveCSV = () => {
@@ -241,11 +242,11 @@ export default function DataEntryPage() {
       <div className="max-w-4xl mx-auto">
         {/* Title Bar */}
         <div className="bg-gradient-to-r from-red-700 to-red-600 rounded-lg shadow-lg p-6 mb-6 text-white">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">OPI Basketball Community</h1>
-              <p className="text-red-100 text-lg md:text-xl font-medium">Highlight Extractor</p>
-            </div>
+          <div className="flex flex-col items-center text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">OPI Basketball Community</h1>
+            <p className="text-red-100 text-lg md:text-xl font-medium">Highlight Extractor</p>
+          </div>
+          <div className="flex justify-end mt-4">
             <button
               onClick={() => setShowHowToUse(true)}
               className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors backdrop-blur-sm border border-white/20"
@@ -292,52 +293,54 @@ export default function DataEntryPage() {
               items={rows.map((row) => row.id)}
               strategy={verticalListSortingStrategy}
             >
-              {/* Desktop Table */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-700 border-b-2 border-red-700">
-                      <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-10">
-                        #
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-10">
-                        
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                        Camera
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                        Time
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                        Side
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white">
-                    {rows.map((row) => (
-                      <SortableTableRow
-                        key={row.id}
-                        row={row}
-                        onUpdate={updateRow}
-                        onDelete={deleteRow}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Cards */}
-              <div className="md:hidden">
-                {rows.map((row) => (
-                  <SortableCard
-                    key={row.id}
-                    row={row}
-                    onUpdate={updateRow}
-                    onDelete={deleteRow}
-                  />
-                ))}
-              </div>
+              {!isMobile ? (
+                /* Desktop Table */
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-700 border-b-2 border-red-700">
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-10">
+                          #
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-10">
+                          
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                          Camera
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                          Time
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                          Side
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {rows.map((row) => (
+                        <SortableTableRow
+                          key={row.id}
+                          row={row}
+                          onUpdate={updateRow}
+                          onDelete={deleteRow}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                /* Mobile Cards */
+                <div>
+                  {rows.map((row) => (
+                    <SortableCard
+                      key={row.id}
+                      row={row}
+                      onUpdate={updateRow}
+                      onDelete={deleteRow}
+                    />
+                  ))}
+                </div>
+              )}
             </SortableContext>
           </DndContext>
 

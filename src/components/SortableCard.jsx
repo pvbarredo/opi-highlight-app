@@ -24,15 +24,19 @@ export default function SortableCard({ row, onUpdate, onDelete }) {
       style={style}
       className="bg-white border border-gray-200 rounded p-4 mb-3"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="text-center text-sm font-semibold text-gray-600 bg-gray-100 rounded px-3 py-1">
+          #{row.placement}
+        </div>
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 mt-1"
+          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
         >
-          <GripVertical size={20} />
+          <GripVertical size={24} />
         </button>
-        
+      </div>
+      <div className="flex items-start gap-3">
         <div className="flex-1 space-y-3">
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase">
@@ -92,13 +96,14 @@ export default function SortableCard({ row, onUpdate, onDelete }) {
             </div>
           </div>
         </div>
-
-        <button
-          onClick={() => onDelete(row.id)}
-          className="text-red-700 hover:text-red-900 transition-colors mt-1"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="flex items-center">
+          <button
+            onClick={() => onDelete(row.id)}
+            className="text-red-700 hover:text-red-900 transition-colors"
+          >
+            <Trash2 size={20} />
+          </button>
+        </div>
       </div>
     </div>
   );

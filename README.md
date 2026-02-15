@@ -1,16 +1,70 @@
-# React + Vite
+# OPI Basketball Community - Highlight Extractor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive web application for extracting and managing basketball game highlights for the OPI Basketball Community.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Bilingual Support:** Full interface available in English and Filipino
+- **Responsive Design:** Optimized for both desktop and mobile devices
+- **Drag & Drop:** Reorder highlight entries with intuitive drag-and-drop
+- **CSV Operations:** Save, import, and email CSV files with highlight data
+- **Date Management:** Select game dates with a built-in date picker
+- **Email Integration:** Quick submission via email to pvbarredo@gmail.com
+- **Mobile Optimized:** Card-based layout with larger touch targets for mobile users
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework:** React 19.2.0 with Vite
+- **Styling:** Tailwind CSS 3
+- **Drag & Drop:** @dnd-kit/core and @dnd-kit/sortable
+- **Date Picker:** react-datepicker
+- **Icons:** lucide-react
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Deployment
+
+This app is configured for deployment to GitHub Pages using GitHub Actions.
+
+1. Enable GitHub Pages in your repository settings
+2. Set the source to "GitHub Actions"
+3. Push to the `main` branch to trigger automatic deployment
+
+## Component Architecture
+
+The application is modular with the following components:
+
+- **DataEntryPage.jsx** - Main orchestrator component
+- **SortableTableRow.jsx** - Desktop table row with drag-and-drop
+- **SortableCard.jsx** - Mobile card layout with placement badges
+- **HowToUseModal.jsx** - Bilingual instruction modal
+- **AlertModal.jsx** - Reusable alert/confirmation dialogs
+- **DateSelector.jsx** - Game date picker
+- **ActionButtons.jsx** - Save, Import, Email, Submit actions
+- **Footer.jsx** - Attribution footer
+
+## Usage
+
+1. **Select Game Date:** Choose the date of the game
+2. **Add Highlights:** Enter camera ID, timestamp (HH:MM:SS), and camera side (L/R)
+3. **Reorder:** Drag rows to change the highlight order
+4. **Save/Import:** Export to CSV for backup or import previous work
+5. **Submit:** Email your highlights to pvbarredo@gmail.com
+
+## License
+
+Created for the OPI Basketball Community

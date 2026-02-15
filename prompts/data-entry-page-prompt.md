@@ -1,7 +1,7 @@
 # Data Entry Page Component Prompt
 
 **Date Created:** February 14, 2026  
-**Last Updated:** February 14, 2026
+**Last Updated:** February 15, 2026
 
 ## Role
 Act as a Senior Frontend Engineer specialized in React and Tailwind CSS.
@@ -58,9 +58,11 @@ Use a vertical stack with clean card-based sections.
 ### Section 0: Title Bar
 - Large gradient header with red-700 to red-600 background
 - White text with shadow
-- Main title: "OPI Basketball Community" (text-3xl md:text-4xl, bold)
-- Subtitle: "Highlight Extractor" (text-lg md:text-xl, red-100 color, medium weight)
-- **"How to Use" Button:** Positioned at top-right of title bar
+- **Layout:** Centered flex column design
+  - Main title: "OPI Basketball Community" (text-3xl md:text-4xl, bold, centered)
+  - Subtitle: "Highlight Extractor" (text-lg md:text-xl, red-100 color, medium weight, centered)
+- **"How to Use" Button:** Positioned at bottom-right of title bar in a separate div
+  - Uses `flex justify-end mt-4` for bottom-right positioning
   - Lightbulb icon with "How to Use" label
   - White/10 background with backdrop blur, hover to white/20
   - Border: white/20
@@ -70,12 +72,13 @@ Use a vertical stack with clean card-based sections.
 
 ### How to Use Modal
 - **Trigger:** Lightbulb button in title bar
-- **Modal Overlay:** Fixed position, black/50 background, z-50
+- **Modal Overlay:** Fixed position, black/50 background, z-50, centered with `flex items-center justify-center`
 - **Modal Content:** 
   - White background, rounded-lg, max-w-2xl
   - Max height 90vh with scrollable content
   - Sticky header with title, lightbulb icon, and close button (X)
   - Close on overlay click or X button
+  - **Content Alignment:** All section headers and content use `items-start` for left alignment (better readability)
 - **Content Sections (with emoji icons):**
   - 📅 **Select Game Date:** Instructions to select the game date
   - 📹 **Camera Values:** 
@@ -94,9 +97,16 @@ Use a vertical stack with clean card-based sections.
     - Left (L): Closer side to camera
     - Right (R): Farther side from camera
     - 💡 Tip about right side potentially offering better angles
+  - 🎬 **Action Buttons:**
+    - 💾 Save CSV: Downloads a CSV file with all highlight entries for backup
+    - 📂 Import CSV: Upload previously saved CSV file to restore entries
+    - 📧 Email CSV: Opens email app with CSV data ready to send to pvbarredo@gmail.com
+    - ✅ Submit: Opens email app with formatted message ready to submit to pvbarredo@gmail.com
+  - **Filipino Translation:** All sections available in Filipino language
 - **Styling:** 
   - Modal header: sticky, white background with border-bottom
   - Content padding: p-6, space-y-5
+  - Section headers: `flex items-start gap-2` for left-aligned emoji + text
   - Code examples: gray-100 background, red-700 text, font-mono
   - Timing rules box: red-50 background with red-200 border
   - Red-700 bullet points for timing rules
@@ -264,6 +274,14 @@ const sensors = useSensors(
 ### Responsiveness
 On mobile, transform the table into a "card" layout where each row becomes a card with labeled fields. Use Tailwind's `md:` prefix for desktop-specific styling.
 
+**Mobile Card Design:**
+- Display placement number at the top with drag handle (# badge with gray-100 background)
+- Larger drag handle icon (size 24 instead of 20) with touch-none class for better mobile interaction
+- Gray-400 drag handle color, hover to gray-600
+- Placement number shown as `#{row.placement}` in a rounded badge
+- All form fields arranged vertically with proper spacing
+- Delete button positioned to the right of form fields
+
 ## State Structure
 Manage the table data using a `useState` array of objects, where each object has:
 - `id`: unique identifier (timestamp string)
@@ -316,3 +334,8 @@ Provide the complete code in a single file or clearly separated components. Incl
 - **2026-02-14 (Modal UI):** Converted "How to Use" section to a lightbulb button in title bar that opens a modal dialog, improved content presentation with better styling and scrollable content.
 - **2026-02-14 (Alert Modals):** Replaced all browser `alert()` and `confirm()` dialogs with custom modal components for better UX consistency. Includes success messages (import, submit) and confirmation dialogs (reset table) with Cancel/Confirm buttons.
 - **2026-02-14 (Email Feature):** Added "Email CSV" button that opens default email client with mailto: link to pvbarredo@gmail.com. Email includes CSV data in body for easy copy/paste. Changed button layout to responsive grid (2 cols mobile, 4 cols desktop).
+- **2026-02-15 (Layout Update):** Centered title and subtitle in title bar, moved "How to Use" button to bottom-right of title bar in a separate div for better visual hierarchy.
+- **2026-02-15 (Mobile UX):** Improved mobile drag functionality with larger touch target (size 24), added placement number display (#badge) at top of mobile cards, added touch-none class to drag handle for better mobile interaction.
+- **2026-02-15 (Conditional Rendering):** Fixed double update trigger bug by implementing conditional rendering instead of CSS hiding for mobile/desktop views. Added isMobile state and useEffect hook for window resize detection.
+- **2026-02-15 (User Guide Enhancement):** Added Action Buttons section to "How to Use" modal explaining Save CSV, Import CSV, Email CSV, and Submit functionality. Improved readability and added complete Filipino translations for all sections.
+- **2026-02-15 (Content Alignment):** Updated HowToUseModal to left-align all content sections using `items-start` instead of `items-center` for improved readability while keeping modal centered on screen.
