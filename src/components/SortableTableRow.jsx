@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
 
-export default function SortableTableRow({ row, onUpdate, onDelete }) {
+export default function SortableTableRow({ row, onUpdate, onDelete, onTimeBlur }) {
   const {
     attributes,
     listeners,
@@ -50,6 +50,7 @@ export default function SortableTableRow({ row, onUpdate, onDelete }) {
           type="text"
           value={row.time}
           onChange={(e) => onUpdate(row.id, 'time', e.target.value)}
+          onBlur={(e) => onTimeBlur(row.id, e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700 text-sm"
           placeholder="00.00"
         />

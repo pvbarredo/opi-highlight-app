@@ -1,7 +1,7 @@
 # Data Entry Page Component Prompt
 
 **Date Created:** February 14, 2026  
-**Last Updated:** February 15, 2026
+**Last Updated:** February 16, 2026
 
 ## Role
 Act as a Senior Frontend Engineer specialized in React and Tailwind CSS.
@@ -87,12 +87,15 @@ Use a vertical stack with clean card-based sections.
     - Multi-part videos format: "Cam 2 Part 1" (in code style)
   - ⏱️ **Timestamp Format:** 
     - Format: HH:MM:SS (e.g., "01:53:22")
+    - **Auto-formatting on blur:** If user enters "4:34", it converts to "00:04:34" (4 minutes, 34 seconds)
+    - **Validation:** Shows error alert if format is invalid or if minutes/seconds exceed 59
     - Red-50 background timing rules box:
       - Shoot/Score: When ball goes through the net
       - Pass: When receiver catches the ball
       - Rebound: When rebounder secures the ball
       - Steal: When player gains possession
       - Block: When contact is made with the ball
+      - **Good Move:** When there's an impressive play, even without a score
   - ◀️ ▶️ **Camera Side:**
     - Left (L): Closer side to camera
     - Right (R): Farther side from camera
@@ -127,10 +130,14 @@ Use a vertical stack with clean card-based sections.
 1. **Placement (Desktop only):** Display row number/order (centered, bold, gray-600)
 2. **Drag Handle:** Visible grip icon for row reordering (subtle gray color)
 3. **Camera:** A text input field with placeholder "Cam ID"
+   - **Auto-side setting:** When value contains "Cam1", side sets to Left (L); when "Cam2", side sets to Right (R)
 4. **Time:** A free text input field with placeholder "00.00"
+   - **Auto-formatting:** onBlur event formats time to HH:MM:SS (e.g., "4:34" → "00:04:34")
+   - **Validation:** Shows error alert if format is invalid or values out of range
 5. **Side:** A radio group with two options: "L" (Left) and "R" (Right)
    - Note: Each row must have a unique name attribute for its radio group (`side-${row.id}`)
    - Radio buttons styled with red accent color
+   - Automatically set based on camera value but can be manually changed
    - Delete button (X icon) integrated within the Side column, not in a separate column
 
 #### Table Header Styling
@@ -146,6 +153,7 @@ Use a vertical stack with clean card-based sections.
   - Light gray dashed border
   - Centered text
   - Hover effect on border and text
+  - **Auto-copy feature:** If the previous row has both camera and time values filled, the new row automatically copies those values (including side)
 - **Delete Button:** Red X icon (Trash2) integrated into each row's Side column
 - **Drag-and-Drop:** Implement a drag handle (grip icon) on each row allowing the user to reorder the list
 
@@ -300,26 +308,106 @@ Manage the table data using a `useState` array of objects, where each object has
 **updateRow Implementation:**
 ```jsx
 const updateRow = (id, field, value) => {
-  setRows((prevRows) => {
-    const updatedRows = prevRows.map((row) => 
-      row.id === id ? { ...row, [field]: value } : row
-    );
-    
-    // Optional: Console logging for debugging
-    console.log('=== UPDATE ROW ===');
-    console.log('Row ID:', id);
-    console.log('Field:', field);
-    console.log('New Value:', value);
-    console.log('Updated Row:', updatedRows.find(row => row.id === id));
-    console.log('All Rows:', JSON.stringify(updatedRows, null, 2));
-    console.log('==================');
-    
-    return updatedRows;
-  });
+  setRows((prevRows) =>
+    prevRows.map((row) => {
+      if (row.id === id) {
+        const updatedRow = { ...row, [field]: value };
+        
+        // Auto-set side based on camera value
+        if (field === 'camera') {
+          const cameraValue = value.toLowerCase();
+          if (cameraValue.includes('cam1')) {
+            updatedRow.side = 'left';
+          } else if (cameraValue.includes('cam2')) {
+            updatedRow.side = 'right';
+          }
+        }
+        
+        return updatedRow;
+      }
+      return row;
+    })
+  );
 };
 ```
 - **CRITICAL:** Must use functional setState `setRows((prevRows) => ...)` to ensure proper re-rendering
-- Includes console logging to track state updates (especially useful for debugging radio button changes)
+- **Auto-side setting:** When camera field is updated:
+  - If camera value contains "Cam1" (case-insensitive), side auto-sets to "left" (L)
+  - If camera value contains "Cam2", side auto-sets to "right" (R)
+  - Users can still manually change the side after it's auto-set
+
+**handleTimeBlur Implementation:**
+```jsx
+const handleTimeBlur = (id, value) => {
+  if (!value || value.trim() === '') return;
+  
+  // Remove any non-digit and non-colon characters
+  const cleanValue = value.replace(/[^\d:]/g, '');
+  
+  // Split by colon
+  const parts = cleanValue.split(':').filter(part => part !== '');
+  
+  if (parts.length === 0) {
+    // Show error alert
+    return;
+  }
+  
+  let hours = '00', minutes = '00', seconds = '00';
+  
+  if (parts.length === 1) {
+    // Only one number - treat as seconds
+    seconds = parts[0].padStart(2, '0');
+  } else if (parts.length === 2) {
+    // Two parts - treat as MM:SS
+    minutes = parts[0].padStart(2, '0');
+    seconds = parts[1].padStart(2, '0');
+  } else if (parts.length >= 3) {
+    // Three or more parts - treat as HH:MM:SS
+    hours = parts[0].padStart(2, '0');
+    minutes = parts[1].padStart(2, '0');
+    seconds = parts[2].padStart(2, '0');
+  }
+  
+  // Validate ranges
+  const h = parseInt(hours);
+  const m = parseInt(minutes);
+  const s = parseInt(seconds);
+  
+  if (isNaN(h) || isNaN(m) || isNaN(s) || m > 59 || s > 59) {
+    // Show error alert
+    return;
+  }
+  
+  const formattedTime = `${hours}:${minutes}:${seconds}`;
+  updateRow(id, 'time', formattedTime);
+};
+```
+- **Time formatting on blur:** Automatically formats time input when user leaves the field
+  - Single number (e.g., "45") → "00:00:45"
+  - Two parts (e.g., "4:34") → "00:04:34"
+  - Three parts (e.g., "1:23:45") → "01:23:45"
+- **Validation:** Checks that minutes and seconds are 0-59, shows error alert if invalid
+- **Must pass to child components:** Both SortableTableRow and SortableCard must receive `onTimeBlur` prop
+
+**addRow Implementation:**
+```jsx
+const addRow = () => {
+  // Get the last row to check if we should copy values
+  const lastRow = rows[rows.length - 1];
+  const shouldCopyValues = lastRow && lastRow.camera && lastRow.time;
+  
+  const newRow = {
+    id: Date.now().toString(),
+    camera: shouldCopyValues ? lastRow.camera : '',
+    time: shouldCopyValues ? lastRow.time : '',
+    side: shouldCopyValues ? lastRow.side : 'left',
+    placement: rows.length + 1,
+  };
+  setRows([...rows, newRow]);
+};
+```
+- **Auto-copy logic:** If the previous row has both camera and time values, copy them to new row
+- Copies side value as well when auto-copying
 
 ## Output
 Provide the complete code in a single file or clearly separated components. Include necessary imports and basic Tailwind configuration classes.
@@ -339,3 +427,7 @@ Provide the complete code in a single file or clearly separated components. Incl
 - **2026-02-15 (Conditional Rendering):** Fixed double update trigger bug by implementing conditional rendering instead of CSS hiding for mobile/desktop views. Added isMobile state and useEffect hook for window resize detection.
 - **2026-02-15 (User Guide Enhancement):** Added Action Buttons section to "How to Use" modal explaining Save CSV, Import CSV, Email CSV, and Submit functionality. Improved readability and added complete Filipino translations for all sections.
 - **2026-02-15 (Content Alignment):** Updated HowToUseModal to left-align all content sections using `items-start` instead of `items-center` for improved readability while keeping modal centered on screen.
+- **2026-02-16 (Auto-Copy Feature):** New row now automatically copies camera, time, and side values from previous row if both camera and time are filled.
+- **2026-02-16 (Time Validation):** Added automatic time formatting on blur with HH:MM:SS validation. Partial inputs like "4:34" auto-format to "00:04:34". Shows error alert for invalid formats or out-of-range values (minutes/seconds > 59).
+- **2026-02-16 (Auto-Side Setting):** Camera field now automatically sets side: Cam1 → Left (L), Cam2 → Right (R). Users can still manually change side after auto-setting.
+- **2026-02-16 (Timing Rules Update):** Added "Good Move" to timing rules in How to Use modal (both English and Filipino) - allows highlighting impressive plays even without scoring.

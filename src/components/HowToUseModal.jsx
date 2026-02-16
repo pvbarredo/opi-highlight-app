@@ -96,6 +96,10 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                       <span className="text-red-700 font-bold">•</span>
                       <span><strong>Block:</strong> When contact is made with the ball</span>
                     </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-700 font-bold">•</span>
+                      <span><strong>Good Move:</strong> When there's an impressive play, even without a score</span>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -188,6 +192,10 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                     <li className="flex items-start gap-2">
                       <span className="text-red-700 font-bold">•</span>
                       <span><strong>Block:</strong> Kapag tumama ang kamay sa bola</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-700 font-bold">•</span>
+                      <span><strong>Magandang Galaw:</strong> Kapag may kahanga-hangang play, kahit walang puntos</span>
                     </li>
                   </ul>
                 </div>

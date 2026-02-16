@@ -78,11 +78,15 @@ export default function DataEntryPage() {
   };
 
   const addRow = () => {
+    // Get the last row to check if we should copy values
+    const lastRow = rows[rows.length - 1];
+    const shouldCopyValues = lastRow && lastRow.camera && lastRow.time;
+    
     const newRow = {
       id: Date.now().toString(),
-      camera: '',
-      time: '',
-      side: 'left',
+      camera: shouldCopyValues ? lastRow.camera : '',
+      time: shouldCopyValues ? lastRow.time : '',
+      side: shouldCopyValues ? lastRow.side : 'left',
       placement: rows.length + 1,
     };
     setRows([...rows, newRow]);
@@ -100,10 +104,81 @@ export default function DataEntryPage() {
 
   const updateRow = (id, field, value) => {
     setRows((prevRows) =>
-      prevRows.map((row) =>
-        row.id === id ? { ...row, [field]: value } : row
-      )
+      prevRows.map((row) => {
+        if (row.id === id) {
+          const updatedRow = { ...row, [field]: value };
+          
+          // Auto-set side based on camera value
+          if (field === 'camera') {
+            const cameraValue = value.toLowerCase();
+            if (cameraValue.includes('cam1')) {
+              updatedRow.side = 'left';
+            } else if (cameraValue.includes('cam2')) {
+              updatedRow.side = 'right';
+            }
+          }
+          
+          return updatedRow;
+        }
+        return row;
+      })
     );
+  };
+
+  const handleTimeBlur = (id, value) => {
+    if (!value || value.trim() === '') return;
+    
+    // Remove any non-digit and non-colon characters
+    const cleanValue = value.replace(/[^\d:]/g, '');
+    
+    // Split by colon
+    const parts = cleanValue.split(':').filter(part => part !== '');
+    
+    if (parts.length === 0) {
+      setAlertModal({
+        show: true,
+        title: 'Invalid Time Format',
+        message: 'Please enter time in HH:MM:SS format (numbers only)',
+        type: 'info',
+        onConfirm: null,
+      });
+      return;
+    }
+    
+    let hours = '00', minutes = '00', seconds = '00';
+    
+    if (parts.length === 1) {
+      // Only one number - treat as seconds
+      seconds = parts[0].padStart(2, '0');
+    } else if (parts.length === 2) {
+      // Two parts - treat as MM:SS
+      minutes = parts[0].padStart(2, '0');
+      seconds = parts[1].padStart(2, '0');
+    } else if (parts.length >= 3) {
+      // Three or more parts - treat as HH:MM:SS
+      hours = parts[0].padStart(2, '0');
+      minutes = parts[1].padStart(2, '0');
+      seconds = parts[2].padStart(2, '0');
+    }
+    
+    // Validate ranges
+    const h = parseInt(hours);
+    const m = parseInt(minutes);
+    const s = parseInt(seconds);
+    
+    if (isNaN(h) || isNaN(m) || isNaN(s) || m > 59 || s > 59) {
+      setAlertModal({
+        show: true,
+        title: 'Invalid Time Format',
+        message: 'Invalid time values. Minutes and seconds must be 0-59.',
+        type: 'info',
+        onConfirm: null,
+      });
+      return;
+    }
+    
+    const formattedTime = `${hours}:${minutes}:${seconds}`;
+    updateRow(id, 'time', formattedTime);
   };
 
   const handleSaveCSV = () => {
@@ -323,6 +398,7 @@ export default function DataEntryPage() {
                           row={row}
                           onUpdate={updateRow}
                           onDelete={deleteRow}
+                          onTimeBlur={handleTimeBlur}
                         />
                       ))}
                     </tbody>
@@ -337,6 +413,7 @@ export default function DataEntryPage() {
                       row={row}
                       onUpdate={updateRow}
                       onDelete={deleteRow}
+                      onTimeBlur={handleTimeBlur}
                     />
                   ))}
                 </div>
