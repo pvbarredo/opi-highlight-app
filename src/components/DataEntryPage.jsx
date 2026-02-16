@@ -181,7 +181,23 @@ export default function DataEntryPage() {
     updateRow(id, 'time', formattedTime);
   };
 
-  const handleSaveCSV = () => {
+  const validateCameraSides = () => {
+    const mismatches = [];
+    
+    rows.forEach((row) => {
+      const cameraLower = row.camera.toLowerCase();
+      
+      if (cameraLower.includes('cam1') && row.side !== 'left') {
+        mismatches.push({ placement: row.placement, camera: row.camera, expected: 'Left', actual: row.side === 'left' ? 'Left' : 'Right' });
+      } else if (cameraLower.includes('cam2') && row.side !== 'right') {
+        mismatches.push({ placement: row.placement, camera: row.camera, expected: 'Right', actual: row.side === 'left' ? 'Left' : 'Right' });
+      }
+    });
+    
+    return mismatches;
+  };
+
+  const performSaveCSV = () => {
     // CSV export logic with date
     const dateRow = ['Date', selectedDate.toISOString().split('T')[0]];
     const headers = ['Placement', 'Camera', 'Time', 'Side'];
@@ -195,6 +211,31 @@ export default function DataEntryPage() {
     link.download = `data-${selectedDate.toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleSaveCSV = () => {
+    // Validate camera sides before saving
+    const mismatches = validateCameraSides();
+    
+    if (mismatches.length > 0) {
+      const mismatchDetails = mismatches.map(m => 
+        `Row ${m.placement}: ${m.camera} (Expected: ${m.expected}, Current: ${m.actual})`
+      ).join('\n');
+      
+      setAlertModal({
+        show: true,
+        title: '⚠️ Camera Side Warning',
+        message: `Please double-check the side settings for better video quality:\n\n• Cam1 clips should use Left side\n• Cam2 clips should use Right side\n\nMismatched entries:\n${mismatchDetails}\n\nDo you want to proceed anyway?`,
+        type: 'warning',
+        onConfirm: () => {
+          setAlertModal({ show: false, title: '', message: '', type: 'info', onConfirm: null });
+          performSaveCSV();
+        },
+      });
+      return;
+    }
+    
+    performSaveCSV();
   };
 
   const handleEmailCSV = async () => {
@@ -290,7 +331,7 @@ export default function DataEntryPage() {
     });
   };
 
-  const handleSubmit = () => {
+  const performSubmit = () => {
     // Submit logic
     const submitData = {
       date: selectedDate.toISOString(),
@@ -310,6 +351,31 @@ export default function DataEntryPage() {
       type: 'success',
       onConfirm: null,
     });
+  };
+
+  const handleSubmit = () => {
+    // Validate camera sides before submitting
+    const mismatches = validateCameraSides();
+    
+    if (mismatches.length > 0) {
+      const mismatchDetails = mismatches.map(m => 
+        `Row ${m.placement}: ${m.camera} (Expected: ${m.expected}, Current: ${m.actual})`
+      ).join('\n');
+      
+      setAlertModal({
+        show: true,
+        title: '⚠️ Camera Side Warning',
+        message: `Please double-check the side settings for better video quality:\n\n• Cam1 clips should use Left side\n• Cam2 clips should use Right side\n\nMismatched entries:\n${mismatchDetails}\n\nDo you want to proceed anyway?`,
+        type: 'warning',
+        onConfirm: () => {
+          setAlertModal({ show: false, title: '', message: '', type: 'info', onConfirm: null });
+          performSubmit();
+        },
+      });
+      return;
+    }
+    
+    performSubmit();
   };
 
   return (

@@ -1,7 +1,7 @@
 # Data Entry Page Component Prompt
 
 **Date Created:** February 14, 2026  
-**Last Updated:** February 16, 2026
+**Last Updated:** February 17, 2026
 
 ## Role
 Act as a Senior Frontend Engineer specialized in React and Tailwind CSS.
@@ -165,6 +165,8 @@ Four buttons in a responsive grid (2 columns on mobile, 4 columns on desktop):
    - Gray-600 background (#4B5563)
    - White text
    - Rounded corners
+   - **Camera-Side Validation:** Before saving, validates that Cam1 rows use Left side and Cam2 rows use Right side
+   - Shows yellow warning modal if mismatches found, allowing user to proceed or cancel
    - Exports table data as CSV file with date in filename
    - **CSV Format:** First line contains `Date,YYYY-MM-DD`, second line is headers `Placement,Camera,Time,Side`, then data rows
    - Hover to gray-700
@@ -194,6 +196,8 @@ Four buttons in a responsive grid (2 columns on mobile, 4 columns on desktop):
    - Red-700 background (#B91C1C)
    - White text
    - Rounded corners
+   - **Camera-Side Validation:** Before submitting, validates that Cam1 rows use Left side and Cam2 rows use Right side
+   - Shows yellow warning modal if mismatches found, allowing user to proceed or cancel
    - Console logs formatted JSON object with:
      - `date`: ISO string
      - `formattedDate`: localized date string
@@ -206,6 +210,7 @@ Four buttons in a responsive grid (2 columns on mobile, 4 columns on desktop):
 
 **Color Scheme (Inspired by OOCL):**
 - **Primary Red:** #B91C1C (red-700) - used for accents, borders, buttons, and highlights
+- **Warning Yellow:** #EAB308 (yellow-500) and #D97706 (yellow-600) - used for warning buttons and alerts
 - **Dark Gray:** #4B5563 (gray-600) - used for Save CSV and Import CSV buttons
 - **Medium Gray:** #374151 (gray-700) - used for table headers (not black/slate-800)
 - **Background:** #F3F4F6 (gray-100) - light gray background
@@ -409,6 +414,54 @@ const addRow = () => {
 - **Auto-copy logic:** If the previous row has both camera and time values, copy them to new row
 - Copies side value as well when auto-copying
 
+**validateCameraSides Implementation:**
+```jsx
+const validateCameraSides = () => {
+  const mismatches = [];
+  
+  rows.forEach((row) => {
+    const cameraLower = row.camera.toLowerCase();
+    
+    if (cameraLower.includes('cam1') && row.side !== 'left') {
+      mismatches.push({ placement: row.placement, camera: row.camera, expected: 'Left', actual: row.side === 'left' ? 'Left' : 'Right' });
+    } else if (cameraLower.includes('cam2') && row.side !== 'right') {
+      mismatches.push({ placement: row.placement, camera: row.camera, expected: 'Right', actual: row.side === 'left' ? 'Left' : 'Right' });
+    }
+  });
+  
+  return mismatches;
+};
+```
+- **Camera-side validation:** Checks all rows for proper camera-side pairing
+  - Cam1 should use Left side
+  - Cam2 should use Right side
+- Returns array of mismatched entries with row details
+- Used by Save CSV and Submit to show warning before proceeding
+
+**performSaveCSV and performSubmit Implementations:**
+- Extract the actual save/submit logic into separate functions
+- Called directly when no validation errors, or after user confirms warning
+- Allows validation warnings to be non-blocking (user can proceed anyway)
+
+**handleSaveCSV and handleSubmit with Validation:**
+- Call `validateCameraSides()` first
+- If mismatches found:
+  - Show warning modal with yellow styling (type: 'warning')
+  - Warning title includes ⚠️ emoji
+  - List all mismatched entries with row number, camera, expected side, and current side
+  - User can click "Cancel" to fix issues or "Proceed Anyway" to continue
+  - If user proceeds, close modal and call `performSaveCSV()` or `performSubmit()`
+- If no mismatches, proceed directly with save/submit
+
+**AlertModal Component - Warning Type:**
+- Supports `type='warning'` for camera-side validation alerts
+- **Yellow styling:** 
+  - Title text: text-yellow-600
+  - Proceed button: bg-yellow-500 hover:bg-yellow-600
+- Shows two buttons: "Cancel" (gray) and "Proceed Anyway" (yellow)
+- Warning allows user to proceed despite validation issues
+- Other types: 'info', 'success', 'confirm'
+
 ## Output
 Provide the complete code in a single file or clearly separated components. Include necessary imports and basic Tailwind configuration classes.
 
@@ -431,3 +484,4 @@ Provide the complete code in a single file or clearly separated components. Incl
 - **2026-02-16 (Time Validation):** Added automatic time formatting on blur with HH:MM:SS validation. Partial inputs like "4:34" auto-format to "00:04:34". Shows error alert for invalid formats or out-of-range values (minutes/seconds > 59).
 - **2026-02-16 (Auto-Side Setting):** Camera field now automatically sets side: Cam1 → Left (L), Cam2 → Right (R). Users can still manually change side after auto-setting.
 - **2026-02-16 (Timing Rules Update):** Added "Good Move" to timing rules in How to Use modal (both English and Filipino) - allows highlighting impressive plays even without scoring.
+- **2026-02-17 (Camera-Side Validation):** Added validation warnings for Save CSV and Submit actions. Checks that Cam1 rows use Left side and Cam2 rows use Right side. Shows yellow warning modal with ⚠️ emoji if mismatches found, displaying all problematic rows. Users can cancel to fix issues or proceed anyway. Updated AlertModal to support 'warning' type with yellow button (bg-yellow-500) and yellow title text (text-yellow-600).
