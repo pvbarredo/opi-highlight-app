@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/opi-highlight-app/',
+  base: process.env.GITHUB_PAGES === 'true' ? '/opi-highlight-app/' : '/',
 })
