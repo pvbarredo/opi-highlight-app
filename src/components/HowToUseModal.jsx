@@ -132,11 +132,11 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                   </div>
                   <div>
                     <p className="font-medium text-gray-700 mb-1">📧 Email CSV</p>
-                    <p>Opens your email app (on desktop or mobile) with the CSV data ready to send to <strong>pvbarredo@gmail.com</strong>. Perfect for quick submissions!</p>
+                    <p>Opens your email app (on desktop or mobile) with the CSV data ready to send to <strong>pvbarredo@gmail.com</strong> and <strong>peter.emmanuel.barredo@oocl.com</strong>. Perfect for quick submissions!</p>
                   </div>
                   <div>
                     <p className="font-medium text-gray-700 mb-1">✅ Submit</p>
-                    <p>Opens your email app with a formatted message containing all your highlight data, ready to submit to <strong>pvbarredo@gmail.com</strong>.</p>
+                    <p>Downloads the CSV file and opens your email app with a formatted message containing all your highlight data, ready to submit to <strong>pvbarredo@gmail.com</strong> and <strong>peter.emmanuel.barredo@oocl.com</strong>.</p>
                   </div>
                 </div>
               </div>
@@ -229,11 +229,11 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                   </div>
                   <div>
                     <p className="font-medium text-gray-700 mb-1">📧 Email CSV</p>
-                    <p>Bubuksan ang iyong email app (sa desktop o mobile) na may CSV data na handa nang ipadala sa <strong>pvbarredo@gmail.com</strong>. Perpekto para sa mabilis na submission!</p>
+                    <p>Bubuksan ang iyong email app (sa desktop o mobile) na may CSV data na handa nang ipadala sa <strong>pvbarredo@gmail.com</strong> at <strong>peter.emmanuel.barredo@oocl.com</strong>. Perpekto para sa mabilis na submission!</p>
                   </div>
                   <div>
                     <p className="font-medium text-gray-700 mb-1">✅ Submit</p>
-                    <p>Bubuksan ang iyong email app na may nakaformat na mensahe na naglalaman ng lahat ng iyong highlight data, handa nang isumite sa <strong>pvbarredo@gmail.com</strong>.</p>
+                    <p>Mag-download ng CSV file at bubuksan ang iyong email app na may nakaformat na mensahe na naglalaman ng lahat ng iyong highlight data, handa nang isumite sa <strong>pvbarredo@gmail.com</strong> at <strong>peter.emmanuel.barredo@oocl.com</strong>.</p>
                   </div>
                 </div>
               </div>

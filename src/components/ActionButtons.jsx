@@ -14,7 +14,7 @@ export default function ActionButtons({ onSaveCSV, onImportCSV, onEmailCSV, onSu
         Import CSV
       </button>
       <button
-        onClick={onEmailCSV}
+        onClick={onSubmit}
         className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
       >
         Submit

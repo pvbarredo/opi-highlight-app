@@ -249,7 +249,7 @@ export default function DataEntryPage() {
     const emailSubject = `OPI Highlight Extract - ${selectedDate.toLocaleDateString('en-US')}`;
     const emailBody = `Hello,\n\nPlease find the highlight extraction data for ${selectedDate.toLocaleDateString('en-US')}:\n\nTotal entries: ${rows.length}\n\n--- CSV DATA ---\n${csvContent}\n--- END CSV DATA ---\n\nBest regards,\nOPI Basketball Community`;
     
-    const mailtoLink = `mailto:pvbarredo@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    const mailtoLink = `mailto:pvbarredo@gmail.com,peter.emmanuel.barredo@oocl.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
     
     // Open default email client
     window.location.href = mailtoLink;
@@ -332,7 +332,10 @@ export default function DataEntryPage() {
   };
 
   const performSubmit = () => {
-    // Submit logic
+    // Submit logic - Save CSV first
+    performSaveCSV();
+    
+    // Then open email
     const submitData = {
       date: selectedDate.toISOString(),
       formattedDate: selectedDate.toLocaleDateString('en-US'),
@@ -344,10 +347,25 @@ export default function DataEntryPage() {
     console.log(JSON.stringify(submitData, null, 2));
     console.log('===================');
     
+    // Generate CSV content for email
+    const dateRow = ['Date', selectedDate.toISOString().split('T')[0]];
+    const headers = ['Placement', 'Camera', 'Time', 'Side'];
+    const csvData = rows.map(row => [row.placement, row.camera, row.time, row.side]);
+    const csvContent = [dateRow.join(','), headers.join(','), ...csvData.map(row => row.join(','))].join('\n');
+    
+    // Create mailto link with CSV data in body
+    const emailSubject = `OPI Highlight Extract - ${selectedDate.toLocaleDateString('en-US')}`;
+    const emailBody = `Hello,\n\nPlease find the highlight extraction data for ${selectedDate.toLocaleDateString('en-US')}:\n\nTotal entries: ${rows.length}\n\n--- CSV DATA ---\n${csvContent}\n--- END CSV DATA ---\n\nBest regards,\nOPI Basketball Community`;
+    
+    const mailtoLink = `mailto:pvbarredo@gmail.com,peter.emmanuel.barredo@oocl.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    
+    // Open default email client
+    window.location.href = mailtoLink;
+    
     setAlertModal({
       show: true,
       title: 'Data Submitted Successfully',
-      message: `Total entries: ${rows.length}\n\nCheck console for JSON output.`,
+      message: `Total entries: ${rows.length}\n\nCSV file downloaded and email client opened.\n\n⚠️ IMPORTANT FOR OOCL OUTLOOK USERS:\nPlease change email sensitivity from "Restricted" to "Public" before sending!\n(Click the sensitivity dropdown and select "Public")`,
       type: 'success',
       onConfirm: null,
     });
