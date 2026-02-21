@@ -22,7 +22,9 @@ export default function SortableCard({ row, onUpdate, onDelete, onTimeBlur }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white border border-gray-200 rounded p-4 mb-3"
+      className={`border border-gray-200 rounded p-4 mb-3 ${
+        row.isNew ? 'bg-yellow-50' : 'bg-white'
+      }`}
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="text-center text-sm font-semibold text-gray-600 bg-gray-100 rounded px-3 py-1">

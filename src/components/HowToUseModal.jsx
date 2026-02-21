@@ -131,10 +131,6 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                     <p>Upload a previously saved CSV file to quickly restore your entries. The file must be in the same format as the one you saved.</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-700 mb-1">📧 Email CSV</p>
-                    <p>Opens your email app (on desktop or mobile) with the CSV data ready to send to <strong>pvbarredo@gmail.com</strong> and <strong>peter.emmanuel.barredo@oocl.com</strong>. Perfect for quick submissions!</p>
-                  </div>
-                  <div>
                     <p className="font-medium text-gray-700 mb-1">✅ Submit</p>
                     <p>Downloads the CSV file and opens your email app with a formatted message containing all your highlight data, ready to submit to <strong>pvbarredo@gmail.com</strong> and <strong>peter.emmanuel.barredo@oocl.com</strong>.</p>
                   </div>
@@ -226,10 +222,6 @@ export default function HowToUseModal({ show, onClose, language, onLanguageChang
                   <div>
                     <p className="font-medium text-gray-700 mb-1">📂 Import CSV</p>
                     <p>Mag-upload ng dating na-save na CSV file para mabilis na maibalik ang iyong mga entries. Ang file ay dapat nasa parehong format ng iyong na-save.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">📧 Email CSV</p>
-                    <p>Bubuksan ang iyong email app (sa desktop o mobile) na may CSV data na handa nang ipadala sa <strong>pvbarredo@gmail.com</strong> at <strong>peter.emmanuel.barredo@oocl.com</strong>. Perpekto para sa mabilis na submission!</p>
                   </div>
                   <div>
                     <p className="font-medium text-gray-700 mb-1">✅ Submit</p>

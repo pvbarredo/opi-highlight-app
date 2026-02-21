@@ -1,7 +1,7 @@
 # Data Entry Page Component Prompt
 
 **Date Created:** February 14, 2026  
-**Last Updated:** February 17, 2026
+**Last Updated:** February 21, 2026
 
 ## Role
 Act as a Senior Frontend Engineer specialized in React and Tailwind CSS.
@@ -103,8 +103,7 @@ Use a vertical stack with clean card-based sections.
   - 🎬 **Action Buttons:**
     - 💾 Save CSV: Downloads a CSV file with all highlight entries for backup
     - 📂 Import CSV: Upload previously saved CSV file to restore entries
-    - 📧 Email CSV: Opens email app with CSV data ready to send to pvbarredo@gmail.com
-    - ✅ Submit: Opens email app with formatted message ready to submit to pvbarredo@gmail.com
+    - ✅ Submit: Downloads the CSV file and opens email app with formatted message ready to submit to pvbarredo@gmail.com and peter.emmanuel.barredo@oocl.com
   - **Filipino Translation:** All sections available in Filipino language
 - **Styling:** 
   - Modal header: sticky, white background with border-bottom
@@ -123,6 +122,44 @@ Use a vertical stack with clean card-based sections.
   - Hover to gray-700
   - Click prompts confirmation dialog before resetting all rows to initial state (single empty row)
   - Text: "Reset"
+
+### Section 1.5: Search Button Row
+- **Positioned:** Between date picker and table
+- **Alignment:** Right-aligned (flex justify-end)
+- **Button Style:**
+  - Red-600 background with white text
+  - Hover to red-700
+  - Search icon with "Search Time" label
+  - Shadow-sm
+- **Opens SearchModal** when clicked
+
+### SearchModal Component
+- **Purpose:** Search for existing entries by timestamp within ±6 seconds
+- **Overlay:** Fixed position, black/50 background, z-50, centered
+- **Modal Content:** White background, rounded-lg, max-w-md
+- **Header:**
+  - Search icon with "Search Time" title
+  - Subtitle: "Find entries within ±6 seconds"
+  - Close button (X)
+- **Input Section:**
+  - Label: "Time (HH:MM:SS, MM:SS, or SS)"
+  - Placeholder: "55 or 12:45 or 01:12:45"
+  - Search button next to input
+  - **Flexible Time Format:**
+    - Single number (e.g., "55") → auto-converts to "00:00:55"
+    - Two parts (e.g., "12:45") → auto-converts to "00:12:45"
+    - Full format (e.g., "01:12:45") → stays as entered
+  - Validation: Shows error for invalid format
+  - Enter key triggers search
+- **Results Display:**
+  - Green background cards for matches (bg-green-50 with green-200 border)
+  - Shows: Row number, Camera, Time, Side
+  - Badge indicating difference: "Exact" or "±1s" through "±6s"
+  - If no matches: Gray background with message "No entries found within ±6 seconds"
+- **Search Logic:**
+  - Converts time to seconds for comparison
+  - Finds all entries within ±6 seconds of input time
+  - Displays results sorted by closest match
 
 ### Section 2: Data Entry Table
 
@@ -147,6 +184,17 @@ Use a vertical stack with clean card-based sections.
 - Minimal padding
 - No separate "Actions" column header
 
+#### Table Row Visual Markers
+- **New Row Indicator:** Newly added rows display with yellow background (bg-yellow-50)
+  - Applied only when row is added WITHOUT auto-copied values
+  - Yellow marker removed as soon as ANY field is edited (camera, time, or side)
+  - Helps users quickly identify empty rows that need data entry
+- **Row State Tracking:** Each row can have optional `isNew` flag
+  - Set to `true` when row added with empty values
+  - Removed/deleted when `updateRow` is called for any field
+- **Desktop:** Table rows use `bg-yellow-50` for new rows, `bg-white` otherwise, `hover:bg-gray-50`
+- **Mobile:** Cards use same background logic `bg-yellow-50` for new, `bg-white` otherwise
+
 ### Dynamic Actions
 
 - **Add New Camera Row:** A full-width dashed border button below the table with text "+ Add New Camera Row"
@@ -160,6 +208,7 @@ Use a vertical stack with clean card-based sections.
 ### Action Buttons (Bottom of Form)
 
 Four buttons in a responsive grid (2 columns on mobile, 4 columns on desktop):
+Three buttons in a responsive grid (1 column on mobile, 3 columns on desktop):
 
 1. **Save CSV:** 
    - Gray-600 background (#4B5563)
@@ -180,32 +229,29 @@ Four buttons in a responsive grid (2 columns on mobile, 4 columns on desktop):
    - Parses CSV starting from line 2 (skips date row and header row) and populates table rows
    - Shows success alert with row count
    - Hover to gray-700
-
-3. **Email CSV:**
-   - Gray-600 background (#4B5563)
-   - White text
-   - Rounded corners
-   - Opens default email client with mailto: link
-   - **Recipient:** pvbarredo@gmail.com (hardcoded)
-   - **Subject:** "OPI Highlight Extract - [Date]"
-   - **Body:** Includes CSV data formatted between markers for easy copy/paste
-   - Shows info modal confirming email client opened
-   - Hover to gray-700
    
-4. **Submit:**
-   - Red-700 background (#B91C1C)
+3. **Submit:**
+   - Red-600 background (#DC2626)
    - White text
    - Rounded corners
    - **Camera-Side Validation:** Before submitting, validates that Cam1 rows use Left side and Cam2 rows use Right side
    - Shows yellow warning modal if mismatches found, allowing user to proceed or cancel
+   - **Dual Action:**
+     1. First calls `performSaveCSV()` to download the CSV file
+     2. Then opens default email client with mailto: link
+   - **Recipients:** pvbarredo@gmail.com, peter.emmanuel.barredo@oocl.com (comma-separated in mailto)
+   - **Subject:** "OPI Highlight Extract - [Date]"
+   - **Body:** Includes CSV data formatted between markers for easy copy/paste
+   - **Success Alert:** Shows modal with message including total entries and CSV downloaded confirmation
+   - **OOCL Outlook Warning:** Alert message includes important notice for OOCL Outlook users to change email sensitivity from "Restricted" to "Public" before sending
    - Console logs formatted JSON object with:
      - `date`: ISO string
      - `formattedDate`: localized date string
      - `entries`: array of all row data
      - `totalEntries`: count of rows
-   - Shows success modal
-   - Hover to red-800
+   - Hover to red-700
 
+**Note:** Email CSV button has been removed - Submit now handles both CSV download and email
 ### Styling Details
 
 **Color Scheme (Inspired by OOCL):**
@@ -302,11 +348,13 @@ Manage the table data using a `useState` array of objects, where each object has
 - `camera`: string (camera name/ID)
 - `time`: string (time value)
 - `side`: string ('left' or 'right')
+- `isNew`: boolean (optional) - set to true for newly added empty rows, removed when any field is updated
 
 **Important:** 
 - Placement is recalculated after drag operations and deletions
 - Placement column is displayed in desktop view for easy reference
 - CSV export includes placement for maintaining order on import
+- isNew flag triggers yellow background (bg-yellow-50) visual marker for empty rows
 
 ### State Update Functions
 
@@ -317,6 +365,11 @@ const updateRow = (id, field, value) => {
     prevRows.map((row) => {
       if (row.id === id) {
         const updatedRow = { ...row, [field]: value };
+        
+        // Remove isNew flag when any field is updated
+        if (updatedRow.isNew) {
+          delete updatedRow.isNew;
+        }
         
         // Auto-set side based on camera value
         if (field === 'camera') {
@@ -336,6 +389,7 @@ const updateRow = (id, field, value) => {
 };
 ```
 - **CRITICAL:** Must use functional setState `setRows((prevRows) => ...)` to ensure proper re-rendering
+- **Remove isNew flag:** When any field is updated, removes the isNew flag to clear yellow background
 - **Auto-side setting:** When camera field is updated:
   - If camera value contains "Cam1" (case-insensitive), side auto-sets to "left" (L)
   - If camera value contains "Cam2", side auto-sets to "right" (R)
@@ -407,12 +461,15 @@ const addRow = () => {
     time: shouldCopyValues ? lastRow.time : '',
     side: shouldCopyValues ? lastRow.side : 'left',
     placement: rows.length + 1,
+    isNew: !shouldCopyValues, // Mark as new only if values are NOT copied
   };
   setRows([...rows, newRow]);
 };
 ```
 - **Auto-copy logic:** If the previous row has both camera and time values, copy them to new row
 - Copies side value as well when auto-copying
+- **isNew flag:** Set to true only when values are NOT auto-copied (empty row)
+- **Visual marker:** Rows with `isNew: true` display with yellow background (bg-yellow-50)
 
 **validateCameraSides Implementation:**
 ```jsx
@@ -485,3 +542,8 @@ Provide the complete code in a single file or clearly separated components. Incl
 - **2026-02-16 (Auto-Side Setting):** Camera field now automatically sets side: Cam1 → Left (L), Cam2 → Right (R). Users can still manually change side after auto-setting.
 - **2026-02-16 (Timing Rules Update):** Added "Good Move" to timing rules in How to Use modal (both English and Filipino) - allows highlighting impressive plays even without scoring.
 - **2026-02-17 (Camera-Side Validation):** Added validation warnings for Save CSV and Submit actions. Checks that Cam1 rows use Left side and Cam2 rows use Right side. Shows yellow warning modal with ⚠️ emoji if mismatches found, displaying all problematic rows. Users can cancel to fix issues or proceed anyway. Updated AlertModal to support 'warning' type with yellow button (bg-yellow-500) and yellow title text (text-yellow-600).
+- **2026-02-21 (Email Recipients Update):** Added peter.emmanuel.barredo@oocl.com as second recipient for both Email CSV and Submit actions. Email mailto links now include both pvbarredo@gmail.com and peter.emmanuel.barredo@oocl.com (comma-separated).
+- **2026-02-21 (Submit Enhancement):** Submit button now performs dual action - first downloads CSV file (calls performSaveCSV), then opens email client. Success alert message updated to confirm both CSV download and email client opened. Added OOCL Outlook warning in alert message instructing users to change email sensitivity from "Restricted" to "Public" before sending.
+- **2026-02-21 (Email CSV Removal):** Removed Email CSV button completely. Submit button now handles both CSV download and email functionality. ActionButtons grid changed from 4 columns to 3 columns (grid-cols-1 md:grid-cols-3). Updated How to Use modal (both English and Filipino) to remove Email CSV section, keeping only Save CSV, Import CSV, and Submit.
+- **2026-02-21 (Search Time Feature):** Added SearchModal component for searching existing entries by timestamp. Search button positioned between date picker and table, aligned right. Modal allows flexible time input formats: SS (e.g., "55"), MM:SS (e.g., "12:45"), or HH:MM:SS (e.g., "01:12:45"), auto-converting to full format. Search finds entries within ±6 seconds of input time. Results display in green cards showing row number, camera, time, side, and difference badge ("Exact" or "±1s" through "±6s"). No matches shown in gray card with helpful message.
+- **2026-02-21 (Visual Row Markers):** Added yellow background (bg-yellow-50) indicator for newly added empty rows. New rows get isNew flag set to true only when values are NOT auto-copied. Flag automatically removed when any field (camera, time, or side) is updated via updateRow function. Helps users quickly identify rows that still need data entry. Applied to both SortableTableRow (desktop) and SortableCard (mobile) components.

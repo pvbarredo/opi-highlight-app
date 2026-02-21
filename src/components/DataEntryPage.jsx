@@ -13,13 +13,14 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, Search } from 'lucide-react';
 import SortableTableRow from './SortableTableRow';
 import SortableCard from './SortableCard';
 import HowToUseModal from './HowToUseModal';
 import AlertModal from './AlertModal';
 import DateSelector from './DateSelector';
 import ActionButtons from './ActionButtons';
+import SearchModal from './SearchModal';
 import Footer from './Footer';
 
 export default function DataEntryPage() {
@@ -28,6 +29,7 @@ export default function DataEntryPage() {
     { id: '1', camera: '', time: '', side: 'left', placement: 1 },
   ]);
   const [showHowToUse, setShowHowToUse] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [language, setLanguage] = useState('english'); // 'english' or 'filipino'
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [alertModal, setAlertModal] = useState({
@@ -88,6 +90,7 @@ export default function DataEntryPage() {
       time: shouldCopyValues ? lastRow.time : '',
       side: shouldCopyValues ? lastRow.side : 'left',
       placement: rows.length + 1,
+      isNew: !shouldCopyValues, // Mark as new only if values are NOT copied
     };
     setRows([...rows, newRow]);
   };
@@ -107,6 +110,11 @@ export default function DataEntryPage() {
       prevRows.map((row) => {
         if (row.id === id) {
           const updatedRow = { ...row, [field]: value };
+          
+          // Remove isNew flag when any field is updated
+          if (updatedRow.isNew) {
+            delete updatedRow.isNew;
+          }
           
           // Auto-set side based on camera value
           if (field === 'camera') {
@@ -434,12 +442,30 @@ export default function DataEntryPage() {
           onClose={() => setAlertModal({ show: false, title: '', message: '', type: 'info', onConfirm: null })}
         />
 
+        {/* Search Modal */}
+        <SearchModal
+          show={showSearch}
+          onClose={() => setShowSearch(false)}
+          rows={rows}
+        />
+
         {/* Date Picker Section */}
         <DateSelector
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
           onShowHowToUse={() => setShowHowToUse(true)}
         />
+
+        {/* Search Button Row */}
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => setShowSearch(true)}
+            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm flex items-center gap-2"
+          >
+            <Search size={18} />
+            Search Table
+          </button>
+        </div>
 
         {/* Table Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-4 border-t-4 border-red-700">
@@ -518,7 +544,6 @@ export default function DataEntryPage() {
         <ActionButtons
           onSaveCSV={handleSaveCSV}
           onImportCSV={handleImportCSV}
-          onEmailCSV={handleEmailCSV}
           onSubmit={handleSubmit}
         />
 

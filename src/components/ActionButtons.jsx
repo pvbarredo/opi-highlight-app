@@ -1,6 +1,6 @@
-export default function ActionButtons({ onSaveCSV, onImportCSV, onEmailCSV, onSubmit }) {
+export default function ActionButtons({ onSaveCSV, onImportCSV, onSubmit }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
       <button
         onClick={onSaveCSV}
         className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm"
