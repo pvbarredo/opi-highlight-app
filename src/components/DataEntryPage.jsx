@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Lightbulb, Search } from 'lucide-react';
+import { Lightbulb, Search, Settings } from 'lucide-react';
 import SortableTableRow from './SortableTableRow';
 import SortableCard from './SortableCard';
 import HowToUseModal from './HowToUseModal';
@@ -21,6 +21,7 @@ import AlertModal from './AlertModal';
 import DateSelector from './DateSelector';
 import ActionButtons from './ActionButtons';
 import SearchModal from './SearchModal';
+import SettingsModal from './SettingsModal';
 import Footer from './Footer';
 
 export default function DataEntryPage() {
@@ -30,8 +31,33 @@ export default function DataEntryPage() {
   ]);
   const [showHowToUse, setShowHowToUse] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [language, setLanguage] = useState('english'); // 'english' or 'filipino'
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [cameraSync, setCameraSync] = useState(() => {
+    // Load from localStorage on initial render
+    const saved = localStorage.getItem('appSettings');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return { 
+          cam1Time: '', 
+          cam2Time: '', 
+          difference: null,
+          showDescription: false,
+          showCategory: false
+        };
+      }
+    }
+    return { 
+      cam1Time: '', 
+      cam2Time: '', 
+      difference: null,
+      showDescription: false,
+      showCategory: false
+    };
+  });
   const [alertModal, setAlertModal] = useState({
     show: false,
     title: '',
@@ -39,6 +65,11 @@ export default function DataEntryPage() {
     type: 'info', // 'info', 'success', 'confirm'
     onConfirm: null,
   });
+
+  // Persist settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('appSettings', JSON.stringify(cameraSync));
+  }, [cameraSync]);
 
   // Handle window resize to toggle between mobile and desktop views
   useEffect(() => {
@@ -90,8 +121,19 @@ export default function DataEntryPage() {
       time: shouldCopyValues ? lastRow.time : '',
       side: shouldCopyValues ? lastRow.side : 'left',
       placement: rows.length + 1,
-      isNew: !shouldCopyValues, // Mark as new only if values are NOT copied
+      isNew: true, // Always mark new rows with yellow background
     };
+    
+    // If we copied a camera value that contains cam1 or cam2, set lastValidCamera
+    if (shouldCopyValues) {
+      const cameraLower = lastRow.camera.toLowerCase();
+      const isCam1 = cameraLower === 'cam1' || !!cameraLower.match(/\bcam1\b/i);
+      const isCam2 = cameraLower === 'cam2' || !!cameraLower.match(/\bcam2\b/i);
+      if (isCam1 || isCam2) {
+        newRow.lastValidCamera = lastRow.camera;
+      }
+    }
+    
     setRows([...rows, newRow]);
   };
 
@@ -105,25 +147,155 @@ export default function DataEntryPage() {
     setRows(updated);
   };
 
+  // Helper function to parse time string to seconds
+  const parseTimeToSeconds = (timeStr) => {
+    if (!timeStr || timeStr.trim() === '') return null;
+    
+    const parts = timeStr.split(':');
+    if (parts.length !== 3) return null;
+    
+    const hours = parseInt(parts[0]);
+    const minutes = parseInt(parts[1]);
+    const seconds = parseInt(parts[2]);
+    
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) return null;
+    if (minutes > 59 || seconds > 59) return null;
+    
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+
+  // Helper function to convert seconds back to time string
+  const secondsToTimeString = (totalSeconds) => {
+    if (totalSeconds < 0) totalSeconds = 0; // Prevent negative times
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const handleSaveCameraSync = (syncData) => {
+    setCameraSync(syncData);
+    // Save to localStorage
+    localStorage.setItem('appSettings', JSON.stringify(syncData));
+  };
+
   const updateRow = (id, field, value) => {
     setRows((prevRows) =>
       prevRows.map((row) => {
         if (row.id === id) {
           const updatedRow = { ...row, [field]: value };
           
-          // Remove isNew flag when any field is updated
-          if (updatedRow.isNew) {
+          // Remove isNew flag when user types in camera or time field
+          if (updatedRow.isNew && (field === 'camera' || field === 'time')) {
             delete updatedRow.isNew;
           }
           
-          // Auto-set side based on camera value
+          // Auto-set side based on camera value and adjust time based on camera sync
           if (field === 'camera') {
-            const cameraValue = value.toLowerCase();
+            const cameraValue = (value || '').toLowerCase();
+            
+            // Use lastValidCamera as the old value, or current camera if no valid camera was set before
+            const oldCameraValue = (row.lastValidCamera || '').toLowerCase();
+            
+            console.log('=== CAMERA FIELD CHANGE DEBUG ===');
+            console.log('Old Camera (lastValidCamera):', row.lastValidCamera);
+            console.log('New Camera:', value);
+            console.log('Current Time:', row.time);
+            console.log('Time Difference Setting:', cameraSync?.difference);
+            
+            // Set side
             if (cameraValue.includes('cam1')) {
               updatedRow.side = 'left';
             } else if (cameraValue.includes('cam2')) {
               updatedRow.side = 'right';
             }
+            
+            // Adjust time if camera changed and we have both time and time difference
+            if (row.time && cameraSync && cameraSync.difference !== null && cameraSync.difference !== undefined) {
+              const timeInSeconds = parseTimeToSeconds(row.time);
+              
+              console.log('Time in Seconds:', timeInSeconds);
+              
+              if (timeInSeconds !== null) {
+                // Determine old and new camera types (case-insensitive)
+                const wasCam1 = oldCameraValue === 'cam1' || (oldCameraValue.length > 0 && oldCameraValue.match(/\bcam1\b/i) !== null);
+                const wasCam2 = oldCameraValue === 'cam2' || (oldCameraValue.length > 0 && oldCameraValue.match(/\bcam2\b/i) !== null);
+                const isCam1 = cameraValue === 'cam1' || (cameraValue.length > 0 && cameraValue.match(/\bcam1\b/i) !== null);
+                const isCam2 = cameraValue === 'cam2' || (cameraValue.length > 0 && cameraValue.match(/\bcam2\b/i) !== null);
+                
+                console.log('Camera Type Flags:', {
+                  wasCam1,
+                  wasCam2,
+                  isCam1,
+                  isCam2
+                });
+                
+                // If switching from cam1 to cam2, add the difference
+                if (wasCam1 && isCam2 && !wasCam2 && !isCam1) {
+                  const newTimeInSeconds = timeInSeconds + cameraSync.difference;
+                  const oldTime = row.time;
+                  const newTime = secondsToTimeString(newTimeInSeconds);
+                  updatedRow.time = newTime;
+                  
+                  console.log('✅ Switched cam1 → cam2');
+                  console.log('New Time (seconds):', newTimeInSeconds);
+                  console.log('New Time (formatted):', updatedRow.time);
+                  
+                  // Show alert about the camera switch and time adjustment
+                  setAlertModal({
+                    show: true,
+                    title: '⏱️ Time Adjusted: Cam1 → Cam2',
+                    message: `Camera switched from Cam1 to Cam2.\n\nTime automatically adjusted:\n• Old time: ${oldTime}\n• New time: ${newTime}\n• Difference: +${cameraSync.difference} seconds`,
+                    type: 'info',
+                    onConfirm: null,
+                  });
+                }
+                // If switching from cam2 to cam1, subtract the difference
+                else if (wasCam2 && isCam1 && !wasCam1 && !isCam2) {
+                  const newTimeInSeconds = timeInSeconds - cameraSync.difference;
+                  const oldTime = row.time;
+                  const newTime = secondsToTimeString(newTimeInSeconds);
+                  updatedRow.time = newTime;
+                  
+                  console.log('✅ Switched cam2 → cam1');
+                  console.log('New Time (seconds):', newTimeInSeconds);
+                  console.log('New Time (formatted):', updatedRow.time);
+                  
+                  // Show alert about the camera switch and time adjustment
+                  setAlertModal({
+                    show: true,
+                    title: '⏱️ Time Adjusted: Cam2 → Cam1',
+                    message: `Camera switched from Cam2 to Cam1.\n\nTime automatically adjusted:\n• Old time: ${oldTime}\n• New time: ${newTime}\n• Difference: -${cameraSync.difference} seconds`,
+                    type: 'info',
+                    onConfirm: null,
+                  });
+                } else {
+                  console.log('❌ No time conversion - conditions not met');
+                  console.log('Conversion requires switching between cam1 and cam2');
+                  console.log('Make sure you had cam1 or cam2 set before changing to the other');
+                }
+              } else {
+                console.log('❌ Could not parse time to seconds');
+              }
+            } else {
+              console.log('❌ Time conversion skipped:', {
+                hasTime: !!row.time,
+                hasCameraSync: !!cameraSync,
+                hasDifference: cameraSync?.difference !== null && cameraSync?.difference !== undefined
+              });
+            }
+            
+            // Update lastValidCamera when new value is cam1 or cam2
+            const isCam1 = cameraValue === 'cam1' || (cameraValue && !!cameraValue.match(/\bcam1\b/i));
+            const isCam2 = cameraValue === 'cam2' || (cameraValue && !!cameraValue.match(/\bcam2\b/i));
+            if (isCam1 || isCam2) {
+              updatedRow.lastValidCamera = value;
+              console.log('📌 Updated lastValidCamera to:', value);
+            }
+            
+            console.log('=== END DEBUG ===\n');
           }
           
           return updatedRow;
@@ -193,7 +365,7 @@ export default function DataEntryPage() {
     const mismatches = [];
     
     rows.forEach((row) => {
-      const cameraLower = row.camera.toLowerCase();
+      const cameraLower = (row.camera || '').toLowerCase();
       
       if (cameraLower.includes('cam1') && row.side !== 'left') {
         mismatches.push({ placement: row.placement, camera: row.camera, expected: 'Left', actual: row.side === 'left' ? 'Left' : 'Right' });
@@ -449,6 +621,14 @@ export default function DataEntryPage() {
           rows={rows}
         />
 
+        {/* Settings Modal */}
+        <SettingsModal
+          show={showSettings}
+          onClose={() => setShowSettings(false)}
+          settings={cameraSync}
+          onSave={handleSaveCameraSync}
+        />
+
         {/* Date Picker Section */}
         <DateSelector
           selectedDate={selectedDate}
@@ -457,13 +637,21 @@ export default function DataEntryPage() {
         />
 
         {/* Search Button Row */}
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-end gap-3">
+         
           <button
             onClick={() => setShowSearch(true)}
             className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm flex items-center gap-2"
           >
             <Search size={18} />
             Search Table
+          </button>
+           <button
+            onClick={() => setShowSettings(true)}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm flex items-center gap-2"
+          >
+            <Settings size={18} />
+            
           </button>
         </div>
 

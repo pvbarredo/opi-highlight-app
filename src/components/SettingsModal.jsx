@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Settings, X } from 'lucide-react';
 
-export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
+export default function SettingsModal({ show, onClose, settings, onSave }) {
   const [cam1Time, setCam1Time] = useState('');
   const [cam2Time, setCam2Time] = useState('');
   const [timeDifference, setTimeDifference] = useState(null);
+  const [showDescription, setShowDescription] = useState(false);
+  const [showCategory, setShowCategory] = useState(false);
 
   useEffect(() => {
-    if (show && cameraSync) {
-      setCam1Time(cameraSync.cam1Time || '');
-      setCam2Time(cameraSync.cam2Time || '');
-      if (cameraSync.difference !== null) {
-        setTimeDifference(cameraSync.difference);
-      }
+    if (show && settings) {
+      setCam1Time(settings.cam1Time || '');
+      setCam2Time(settings.cam2Time || '');
+      setTimeDifference(settings.difference !== undefined ? settings.difference : null);
+      setShowDescription(settings.showDescription || false);
+      setShowCategory(settings.showCategory || false);
     }
-  }, [show, cameraSync]);
+  }, [show, settings]);
 
   const parseTimeToSeconds = (timeStr) => {
     if (!timeStr || timeStr.trim() === '') return null;
@@ -42,6 +44,42 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
     return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
+  const formatInputTime = (value) => {
+    if (!value || value.trim() === '') return null;
+    
+    // Remove any spaces
+    const cleanValue = value.trim();
+    
+    // Split by colon
+    const parts = cleanValue.split(':');
+    
+    let formattedTime = '';
+    
+    if (parts.length === 1) {
+      // Only seconds (e.g., "55" -> "00:00:55")
+      const seconds = parts[0].padStart(2, '0');
+      if (parseInt(seconds) > 59) return null;
+      formattedTime = `00:00:${seconds}`;
+    } else if (parts.length === 2) {
+      // Minutes and seconds (e.g., "12:45" -> "00:12:45")
+      const minutes = parts[0].padStart(2, '0');
+      const seconds = parts[1].padStart(2, '0');
+      if (parseInt(minutes) > 59 || parseInt(seconds) > 59) return null;
+      formattedTime = `00:${minutes}:${seconds}`;
+    } else if (parts.length === 3) {
+      // Already HH:MM:SS format
+      const hours = parts[0].padStart(2, '0');
+      const minutes = parts[1].padStart(2, '0');
+      const seconds = parts[2].padStart(2, '0');
+      if (parseInt(minutes) > 59 || parseInt(seconds) > 59) return null;
+      formattedTime = `${hours}:${minutes}:${seconds}`;
+    } else {
+      return null;
+    }
+    
+    return formattedTime;
+  };
+
   const validateTimeFormat = (value) => {
     const timeRegex = /^([0-9]{1,2}):([0-5][0-9]):([0-5][0-9])$/;
     return timeRegex.test(value);
@@ -49,12 +87,30 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
 
   const handleCam1Change = (e) => {
     setCam1Time(e.target.value);
-    calculateDifference(e.target.value, cam2Time);
   };
 
   const handleCam2Change = (e) => {
     setCam2Time(e.target.value);
-    calculateDifference(cam1Time, e.target.value);
+  };
+
+  const handleCam1Blur = () => {
+    if (cam1Time) {
+      const formatted = formatInputTime(cam1Time);
+      if (formatted) {
+        setCam1Time(formatted);
+        calculateDifference(formatted, cam2Time);
+      }
+    }
+  };
+
+  const handleCam2Blur = () => {
+    if (cam2Time) {
+      const formatted = formatInputTime(cam2Time);
+      if (formatted) {
+        setCam2Time(formatted);
+        calculateDifference(cam1Time, formatted);
+      }
+    }
   };
 
   const calculateDifference = (cam1, cam2) => {
@@ -81,22 +137,30 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
   };
 
   const handleSave = () => {
-    if (validateTimeFormat(cam1Time) && validateTimeFormat(cam2Time) && timeDifference !== null) {
-      const syncData = {
-        cam1Time,
-        cam2Time,
-        difference: timeDifference
-      };
-      onSave(syncData);
-      onClose();
-    }
+    const settingsData = {
+      cam1Time: cam1Time || '',
+      cam2Time: cam2Time || '',
+      difference: timeDifference,
+      showDescription,
+      showCategory
+    };
+    onSave(settingsData);
+    onClose();
   };
 
   const handleReset = () => {
     setCam1Time('');
     setCam2Time('');
     setTimeDifference(null);
-    onSave({ cam1Time: '', cam2Time: '', difference: null });
+    setShowDescription(false);
+    setShowCategory(false);
+    onSave({ 
+      cam1Time: '', 
+      cam2Time: '', 
+      difference: null,
+      showDescription: false,
+      showCategory: false
+    });
   };
 
   if (!show) return null;
@@ -110,7 +174,7 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
               <Settings className="text-red-700" size={28} />
               Settings
             </h2>
-            <p className="text-sm text-gray-500 mt-1">Configure camera synchronization</p>
+            <p className="text-sm text-gray-500 mt-1">Configure application settings</p>
           </div>
           <button
             onClick={onClose}
@@ -127,33 +191,35 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cam1 Time (HH:MM:SS)
+                  Cam1 Time (Numbers only - HH:MM:SS)
                 </label>
                 <input
                   type="text"
                   value={cam1Time}
                   onChange={handleCam1Change}
-                  placeholder="00:00:00"
+                  onBlur={handleCam1Blur}
+                  placeholder="55 or 12:45 or 01:12:45"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cam2 Time (HH:MM:SS)
+                  Cam2 Time (Numbers only - HH:MM:SS)
                 </label>
                 <input
                   type="text"
                   value={cam2Time}
                   onChange={handleCam2Change}
-                  placeholder="00:00:00"
+                  onBlur={handleCam2Blur}
+                  placeholder="55 or 12:45 or 01:12:45"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
 
               {timeDifference !== null && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Time Difference:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Time Discrepancy:</p>
                   <p className="text-lg font-bold text-blue-700">
                     {formatTimeFromSeconds(timeDifference)}
                   </p>
@@ -162,6 +228,32 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-5">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Show Additional Columns</h3>
+            
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showDescription}
+                  onChange={(e) => setShowDescription(e.target.checked)}
+                  className="w-5 h-5 text-red-700 focus:ring-red-700 accent-red-700 cursor-pointer rounded"
+                />
+                <span className="text-sm font-medium text-gray-700">Show Description</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showCategory}
+                  onChange={(e) => setShowCategory(e.target.checked)}
+                  className="w-5 h-5 text-red-700 focus:ring-red-700 accent-red-700 cursor-pointer rounded"
+                />
+                <span className="text-sm font-medium text-gray-700">Show Category</span>
+              </label>
             </div>
           </div>
 
@@ -174,8 +266,7 @@ export default function SettingsModal({ show, onClose, cameraSync, onSave }) {
             </button>
             <button
               onClick={handleSave}
-              disabled={!cam1Time || !cam2Time || timeDifference === null}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
               Save
             </button>
